@@ -103,6 +103,11 @@ def preprocess_image(image_path, target_size=alzheimer_img_size):
     image = np.expand_dims(image, axis=0)  # Add batch dimension
     return image
 
+# Endpoint for a simple greeting
+@app.route('/', methods=['GET'])
+def say_hi():
+    return jsonify({"message": "Hi there!"})
+
 # Endpoint for Grad-CAM++
 @app.route('/process', methods=['POST'])
 def process_image():
