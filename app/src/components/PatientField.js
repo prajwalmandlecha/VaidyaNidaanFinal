@@ -1,17 +1,15 @@
 import { StyleSheet, Text, View } from "react-native";
 
-const ProfileField = ({ fieldName, fieldValue }) => {
+const PatientField = ({ fieldName, fieldValue }) => {
   return (
     <View style={styles.field}>
-      <View>
-        <Text style={styles.fieldName}>{fieldName}</Text>
-        <Text style={styles.fieldValue}>{fieldValue}</Text>
-      </View>
+      <Text style={styles.fieldName}>{fieldName}</Text>
+      <Text style={styles.fieldValue}>{fieldValue}</Text>
     </View>
   );
 };
 
-export default ProfileField;
+export default PatientField;
 
 const styles = StyleSheet.create({
   field: {
@@ -26,6 +24,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderColor: "rgba(0, 0, 0, 0.08)",
     borderWidth: 1,
+    alignItems: "center",
   },
   fieldName: {
     fontWeight: "600",

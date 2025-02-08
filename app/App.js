@@ -10,7 +10,7 @@ import * as SecureStore from "expo-secure-store";
 import Login from "./src/screens/Login";
 import SignUp from "./src/screens/SignUp";
 import Home from "./src/screens/Home";
-import Prediction from "./src/screens/Prediction";
+// import Prediction from "./src/screens/Prediction";
 import Chat from "./src/screens/Chat";
 import PatientPage from "./src/screens/PatientPage";
 import Profile from "./src/screens/Profile";
@@ -19,10 +19,10 @@ import { UserProvider, UserContext } from "./src/context/UserContext";
 import { useContext } from "react";
 import LogOutLink from "./src/components/LogOutLink";
 import AddPatient from "./src/screens/AddPatient";
-import GradCamDetection from "./src/screens/GradCamDetection";
+import Analysis from "./src/screens/Analysis";
 import UpdatePatient from "./src/screens/UpdatePatient";
-import Heatmap from "./src/screens/Heatmap";
-import PredictionResult from "./src/screens/PredictionResult";
+import Result from "./src/screens/Result";
+// import PredictionResult from "./src/screens/PredictionResult";
 
 const AuthStack = createStackNavigator();
 const AppStack = createBottomTabNavigator();
@@ -39,10 +39,10 @@ const MainNavigator = () => {
       <MainStack.Screen name="PatientPage" component={PatientPage} />
       <MainStack.Screen name="Add Patient" component={AddPatient} />
       <MainStack.Screen name="Update Patient" component={UpdatePatient} />
-      <MainStack.Screen name="Prediction" component={Prediction} />
-      <MainStack.Screen name="GradCamDetection" component={GradCamDetection} />
-      <MainStack.Screen name="Heatmap" component={Heatmap} />
-      <MainStack.Screen name="PredictionResult" component={PredictionResult} />
+      <MainStack.Screen name="MRI Analysis" component={Analysis} />
+      <MainStack.Screen name="Result" component={Result} />
+      {/* <MainStack.Screen name="Prediction" component={Prediction} /> */}
+      {/* <MainStack.Screen name="PredictionResult" component={PredictionResult} /> */}
     </MainStack.Navigator>
   );
 };

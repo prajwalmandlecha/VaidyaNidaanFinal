@@ -44,18 +44,19 @@ const AlzheimerDetectionPage = () => {
     setMriMessage(null);
 
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
     try {
       const response = await fetch(
-        `http://localhost:5005/api/patients/${patientId}/prediction`,
+        `http://localhost:5005/api/patients/${patientId}/prediction`, // Use the correct port and endpoint
         {
-          method: "POST",
+          method: 'POST',
           body: formData,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            // Add authorization header
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
           },
-          credentials: "include",
+          credentials: 'include' // Needed for cookies
         }
       );
 
@@ -138,22 +139,7 @@ const AlzheimerDetectionPage = () => {
           {error && <p className="text-red-500 text-center mt-4">{error}</p>}
         </motion.section>
 
-        {mriMessage && (
-          <motion.section
-            className="mt-12 text-center space-y-4"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            <h2 className="text-4xl font-semibold text-[#0A0A32]">
-              MRI Classification
-            </h2>
-            <div className="bg-[#f9f9f9] p-6 rounded-lg shadow-lg">
-              <p className="text-xl text-[#0A0A32]">{mriMessage}</p>
-            </div>
-          </motion.section>
-        )}
-
+        {/* Prediction Result Section (Only Category and Confidence) */}
         {prediction && (
           <motion.section
             className="mt-12 text-center space-y-4"
@@ -165,10 +151,15 @@ const AlzheimerDetectionPage = () => {
               Prediction Result
             </h2>
             <div className="bg-[#f9f9f9] p-6 rounded-lg shadow-lg">
-              <p className="text-xl text-[#0A0A32]">MRI: {prediction}</p>
-              {confidence !== null && (
+              {/* Displaying Category and Confidence only */}
+              {prediction.category && (
                 <p className="text-xl text-[#0A0A32]">
-                  Alzheimer Probability: {confidence.toFixed(2)}%
+                  Category: {prediction.category}
+                </p>
+              )}
+              {prediction.confidence !== undefined && (
+                <p className="text-xl text-[#0A0A32]">
+                  Confidence: {prediction.confidence.toFixed(2)}%
                 </p>
               )}
             </div>

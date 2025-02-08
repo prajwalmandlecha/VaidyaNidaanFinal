@@ -34,8 +34,9 @@ const SignUp = ({ navigation }) => {
         enableOnAndroid={true}
         extraScrollHeight={30}
         enableAutomaticScroll={true}
+        showsVerticalScrollIndicator={false}
       >
-        <Logo />
+        <Logo height={200} width={200} />
         <CustomTextInput
           value={name}
           setValue={setName}

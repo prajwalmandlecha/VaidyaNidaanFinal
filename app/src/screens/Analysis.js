@@ -2,7 +2,7 @@ import {
   StyleSheet,
   Text,
   View,
-  Button,
+  Image,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
@@ -10,7 +10,7 @@ import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { uploadApi } from "../services/apiService";
-import { gradcam } from "../utils/Patients";
+import { gradcam, prediction } from "../utils/Patients";
 
 const GradCamDetection = ({ navigation, route }) => {
   const { patient } = route.params;
@@ -35,12 +35,18 @@ const GradCamDetection = ({ navigation, route }) => {
     });
 
     try {
-      const responseData = await gradcam(patient.id, formData);
-      console.log("Upload successful:", responseData);
-      navigation.navigate("Heatmap", {
-        originalImage: responseData.mriUrl,
-        heatmapImage: responseData.heatmapUrl,
-      });
+      const [heatmapResponse, predictionResponse] = await Promise.all([
+        gradcam(patient.id, formData),
+        prediction(patient.id, formData),
+      ]);
+      console.log("Upload successful:", heatmapResponse, predictionResponse);
+      if (heatmapResponse && predictionResponse) {
+        navigation.navigate("Result", {
+          predictionData: predictionResponse,
+          originalImage: heatmapResponse.mriUrl,
+          heatmapImage: heatmapResponse.heatmapUrl,
+        });
+      }
     } catch (error) {
       console.error("Error uploading file:", error);
     } finally {
@@ -55,7 +61,7 @@ const GradCamDetection = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MRI Scan Heatmap</Text>
+      <Text style={styles.title}>Analyse MRI Scan for Alzheimer's</Text>
       {/* {      <Text style={styles.subtitle}>Supported format: Image</Text> */}
 
       <TouchableOpacity onPress={pickDocument} style={styles.uploadButton}>
@@ -67,6 +73,10 @@ const GradCamDetection = ({ navigation, route }) => {
 
       {selectedFile && (
         <View style={styles.fileInfo}>
+          {/* <Image
+            source={{ uri: selectedFile.uri }}
+            style={{ height: "100%", width: "100%", resizeMode: "contain" }}
+          /> */}
           <Ionicons name="document-text" size={20} color="#64748B" />
           <View style={styles.fileDetails}>
             <Text style={styles.fileName} numberOfLines={1}>
@@ -113,6 +123,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1E293B",
     marginBottom: 16,
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,

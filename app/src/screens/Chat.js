@@ -5,6 +5,8 @@ import SendIcon from "../components/SendIcon";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { UserContext } from "../context/UserContext";
 import { chatbotApi } from "../services/apiService";
+import removeMarkdown from "remove-markdown";
+import Markdown from "react-native-markdown-display";
 
 const Chat = () => {
   const currentUser = useContext(UserContext);
@@ -22,12 +24,53 @@ const Chat = () => {
   ]);
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isImageSent, setIsImageSent] = useState(false);
+  const markdownStyles = {
+    body: {
+      color: "#07054A",
+      fontSize: 16,
+      padding: 0,
+      margin: 0,
+    },
+
+    paragraph: {
+      marginTop: 0,
+      marginBottom: 0,
+    },
+
+    heading1: {
+      marginTop: 0,
+      marginBottom: 8,
+    },
+
+    bullet_list: {
+      marginTop: 4,
+      marginBottom: 4,
+      paddingLeft: 8,
+    },
+
+    list_item: {
+      marginTop: 2,
+      marginBottom: 2,
+    },
+
+    code_block: {
+      padding: 8,
+      marginVertical: 4,
+    },
+  };
 
   const renderSend = (props) => {
     return (
       <View style={styles.sendContainer}>
         {image && <Image source={{ uri: image }} style={styles.previewImage} />}
-        <SendIcon {...props} image={image} setImage={setImage} />
+        <SendIcon
+          {...props}
+          image={image}
+          setImage={setImage}
+          isImageSent={isImageSent}
+          setIsImageSent={setIsImageSent}
+        />
       </View>
     );
   };
@@ -47,16 +90,17 @@ const Chat = () => {
           />
         )}
         {props.currentMessage.text && (
-          <Text
-            style={[
-              styles.messageText,
-              props.position === "left"
-                ? styles.messageTextLeft
-                : styles.messageTextRight,
-            ]}
-          >
-            {props.currentMessage.text}
-          </Text>
+          <View style={styles.messageContent}>
+            {props.position === "left" ? (
+              <Markdown style={markdownStyles} mergeStyle={true}>
+                {props.currentMessage.text}
+              </Markdown>
+            ) : (
+              <Text style={styles.messageTextRight}>
+                {props.currentMessage.text}
+              </Text>
+            )}
+          </View>
         )}
       </View>
     );
@@ -151,24 +195,73 @@ const Chat = () => {
     }
   };
 
-  const handleImageSend = () => {
-    if (image) {
-      const imageMessage = {
-        _id: Date.now(),
-        image: image,
-        createdAt: new Date(),
-        user: {
-          _id: currentUser.id,
-          name: currentUser.name,
-          avatar: require("../../assets/userAvatar.png"),
-        },
-      };
-      setMessages((previousMessages) =>
-        GiftedChat.append(previousMessages, [imageMessage])
-      );
-      setImage(null);
-    }
-  };
+  // const handleQuerySend = async (newMessages = []) => {
+  //   const text = newMessages[0]?.text?.trim();
+  //   setLoading(true);
+  //   if (!text) {
+  //     alert("Please provide text for analysis");
+  //     return;
+  //   }
+
+  //   setMessages((prev) =>
+  //     GiftedChat.append(prev, [
+  //       {
+  //         _id: Date.now(),
+  //         text: text,
+  //         createdAt: new Date(),
+  //         user: {
+  //           _id: currentUser.id,
+  //           name: currentUser.name,
+  //           avatar: require("../../assets/userAvatar.png"),
+  //         },
+  //       },
+  //     ])
+  //   );
+
+  //   const loadingMessageId = Date.now() + 1;
+  //   setMessages((prev) =>
+  //     GiftedChat.append(prev, [
+  //       {
+  //         _id: loadingMessageId,
+  //         text: "Analyzing...",
+  //         createdAt: new Date(),
+  //         user: {
+  //           _id: 1,
+  //           name: "Vaidya Nidaan",
+  //           avatar: require("../../assets/avatar.png"),
+  //         },
+  //         isLoading: true,
+  //       },
+  //     ])
+  //   );
+
+  //   try {
+  //     const response = await api.post("/query", { text });
+
+  //     setMessages((prev) => prev.filter((msg) => msg._id !== loadingMessageId));
+
+  //     // Add BOT response
+  //     setMessages((prev) =>
+  //       GiftedChat.append(prev, [
+  //         {
+  //           _id: Date.now() + 1,
+  //           text: response.data.analysisResult,
+  //           createdAt: new Date(),
+  //           user: {
+  //             _id: 1,
+  //             name: "Vaidya Nidaan",
+  //             avatar: require("../../assets/avatar.png"),
+  //           },
+  //         },
+  //       ])
+  //     );
+  //   } catch (error) {
+  //     console.error("Upload error:", error);
+  //     alert("Analysis failed - please try again");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const tabBarHeight = useBottomTabBarHeight();
 
@@ -222,6 +315,7 @@ const styles = StyleSheet.create({
   },
   messageTextRight: {
     color: "#FFFFFF",
+    fontSize: 16,
   },
   image: {
     width: 200,
@@ -238,5 +332,22 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 4,
     marginRight: 8,
+  },
+  messageContent: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  messageContent: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    padding: 0, // Reset padding here
+    margin: 0, // Reset margin here
+  },
+
+  bubble: {
+    maxWidth: "80%",
+    borderRadius: 16,
+    padding: 8,
+    marginVertical: 4,
   },
 });

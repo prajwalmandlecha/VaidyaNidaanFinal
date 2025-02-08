@@ -25,8 +25,9 @@ const Login = ({ navigation }) => {
         enableOnAndroid={true}
         extraScrollHeight={30}
         enableAutomaticScroll={true}
+        showsVerticalScrollIndicator={false}
       >
-        <Logo />
+        <Logo height={250} width={250} />
         <EmailInput email={email} setEmail={setEmail} />
         <PasswordInput
           password={password}

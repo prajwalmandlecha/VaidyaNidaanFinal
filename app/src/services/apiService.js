@@ -2,7 +2,7 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = "http://192.168.130.8:5000/api";
+const BASE_URL = "http://192.168.130.8:5050/api";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -14,14 +14,14 @@ const api = axios.create({
 });
 
 export const fileApi = axios.create({
-  baseURL: "http://192.168.130.8:5000/api",
+  baseURL: "http://192.168.130.8:5050/api",
   headers: {
     "Content-Type": "multipart/form-data",
   },
 });
 
 export const chatbotApi = axios.create({
-  baseURL: "http://192.168.130.8:5000/chatbot",
+  baseURL: "http://192.168.130.8:5050/chatbot",
   headers: {
     "Content-Type": "multipart/form-data",
   },

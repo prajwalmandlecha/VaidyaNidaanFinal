@@ -3,8 +3,16 @@ import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
+import { useState } from "react";
 
-const SendIcon = ({ onImageSend, image, setImage, ...props }) => {
+const SendIcon = ({
+  onImageSend,
+  image,
+  setImage,
+  isImageSent,
+  setIsImageSent,
+  ...props
+}) => {
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],

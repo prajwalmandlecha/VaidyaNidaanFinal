@@ -9,7 +9,7 @@ import {
 import React from "react";
 import Feather from "@expo/vector-icons/Feather";
 
-const renderPatient = ({ item, handlePatientPress }) => {
+const renderPatient = ({ item, handlePatientPress, navigation }) => {
   return (
     <TouchableOpacity
       style={styles.userItem}
@@ -48,7 +48,9 @@ const PatientList = ({ data, navigation }) => {
     <View>
       <FlatList
         data={data}
-        renderItem={(props) => renderPatient({ ...props, handlePatientPress })}
+        renderItem={(props) =>
+          renderPatient({ ...props, handlePatientPress, navigation })
+        }
         keyExtractor={(item) => item.id.toString()}
       />
     </View>

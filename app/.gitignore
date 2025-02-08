@@ -1,7 +1,10 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
+removed/
+
 # dependencies
 node_modules/
+android/
 
 # Expo
 .expo/

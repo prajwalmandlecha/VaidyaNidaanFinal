@@ -65,6 +65,7 @@ const AddPatient = ({ navigation }) => {
         enableOnAndroid={true}
         extraScrollHeight={30}
         enableAutomaticScroll={true}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Text style={styles.title}>Add New Patient</Text>

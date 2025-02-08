@@ -55,6 +55,7 @@ const UpdatePatient = ({ navigation, route }) => {
         enableOnAndroid={true}
         extraScrollHeight={30}
         enableAutomaticScroll={true}
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
           <Text style={styles.title}>Update Patient</Text>

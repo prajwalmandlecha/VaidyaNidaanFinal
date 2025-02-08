@@ -1,10 +1,10 @@
 import { StyleSheet, View, Image } from "react-native";
 
-const Logo = () => {
+const Logo = ({ height, width }) => {
   return (
     <View style={styles.logoContainer}>
       <Image
-        style={styles.logoIcon}
+        style={{ ...styles.logoIcon, height, width }}
         source={require("../../assets/logo.png")}
         resizeMode="contain"
       />
@@ -20,8 +20,6 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logoIcon: {
-    width: 250,
-    height: 250,
     borderRadius: 16,
   },
 });
