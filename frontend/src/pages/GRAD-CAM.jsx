@@ -34,7 +34,7 @@ function GradCamAnalysisPage() {
 
     const formData = new FormData();
     formData.append("file", imageFile);
-
+//change
     try {
       const response = await fetch(`http://localhost:5005/api/patients/${userID}/gradcam`, {
         method: 'POST',

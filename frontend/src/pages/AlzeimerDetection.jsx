@@ -37,7 +37,7 @@ const AlzheimerDetectionPage = () => {
 
     const formData = new FormData();
     formData.append('file', file);
-
+//change
     try {
       const response = await fetch('http://localhost:5005/prediction', {
         method: 'POST',
