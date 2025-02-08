@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useParams } from 'react-router-dom';
 
 const AlzheimerDetectionPage = () => {
   const [file, setFile] = useState(null);
@@ -7,6 +8,8 @@ const AlzheimerDetectionPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+
+  const { userId: patientId } = useParams();
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     const selectedFile = e.target.files[0];
@@ -38,11 +41,19 @@ const AlzheimerDetectionPage = () => {
     const formData = new FormData();
     formData.append('file', file);
 //change
-    try {
-      const response = await fetch('http://localhost:5005/prediction', {
-        method: 'POST',
-        body: formData,
-      });
+      try {
+        const response = await fetch(
+          `http://localhost:5005/api/patients/${patientId}/prediction`, // Use correct port and endpoint
+          {
+            method: 'POST',
+            body: formData,
+            headers: {
+              // Add authorization header
+              'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            },
+            credentials: 'include' // Needed for cookies
+          }
+        );
 
       if (!response.ok) {
         throw new Error('Failed to upload image.');
@@ -56,6 +67,7 @@ const AlzheimerDetectionPage = () => {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#D0F0E0] via-white to-[#D0F0E0] p-8 text-[#0A0A32] flex justify-center items-center">

@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom"; // Use useParams to get the userID from the URL
-import axios from "axios";
+import React, { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
 function GradCamAnalysisPage() {
   const { userId } = useParams(); // Fetch the userID from the URL
@@ -14,6 +13,7 @@ function GradCamAnalysisPage() {
   const [imageFile, setImageFile] = useState(null); // Store the uploaded file
   const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false); // Track if Grad-CAM is being processed
+  const [error, setError] = useState(null); // For error handling
 
   // Handle Image File Selection
   const handleFileChange = (event) => {
@@ -26,21 +26,24 @@ function GradCamAnalysisPage() {
 
   // Handle Grad-CAM Analysis
   const handleGradCamAnalysis = async () => {
-
-
     setIsProcessing(true);
     setError(null);
-    setData(null);
+
+    // Reset the gradCamResult image to prevent any unexpected behavior
+    setData({
+      image: data.image,  // Keep the previous image until the Grad-CAM result comes in
+      gradCamResult: null, // Reset the Grad-CAM result while it's processing
+    });
 
     const formData = new FormData();
-    formData.append("file", imageFile);
-//change
+    formData.append("file", imageFile); // Append the file with the correct key ("file")
+
     try {
-      const response = await fetch(`http://localhost:5005/api/patients/${userID}/gradcam`, {
+      const response = await fetch(`http://localhost:5005/api/patients/${userId}/gradcam`, {
         method: 'POST',
         body: formData,
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Pass token for authentication
         },
       });
 
@@ -49,16 +52,22 @@ function GradCamAnalysisPage() {
       }
 
       const result = await response.json();
-      setData({
-        gradCamResult: result.gradCamResult, // The URL of the heatmap image
-        image: result.mriUrl, // The URL of the MRI image
-      });
-    } catch (error) {
-    } finally {
-      setIsProcessing(false);
-    }
-};
 
+      if (result.success) {
+        setData({
+          gradCamResult: result.heatmapUrl, // The URL of the heatmap image from Cloudinary
+          image: data.image, // The URL of the MRI image (unchanged)
+        });
+      } else {
+        setError(result.error || 'Something went wrong with the Grad-CAM processing.');
+      }
+
+    } catch (error) {
+      setError(error.message); // Set error if something goes wrong
+    } finally {
+      setIsProcessing(false); // Turn off processing state
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#D0F0E0] via-white to-[#D0F0E0] flex justify-center items-center p-8">
@@ -93,7 +102,7 @@ function GradCamAnalysisPage() {
           <div className="w-1/2 flex flex-col items-center">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Uploaded Image</h3>
             <div className="w-full h-[450px] flex items-center justify-center bg-gray-200 rounded-lg overflow-hidden">
-              {data.image ? (
+              {data && data.image ? (
                 <img
                   src={data.image}
                   alt="Uploaded"
@@ -109,7 +118,7 @@ function GradCamAnalysisPage() {
           <div className="w-1/2 flex flex-col items-center">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Grad-CAM Result</h3>
             <div className="w-full h-[450px] flex items-center justify-center bg-gray-200 rounded-lg overflow-hidden">
-              {data.gradCamResult ? (
+              {data && data.gradCamResult ? (
                 <img
                   src={data.gradCamResult}
                   alt="Grad-CAM Result"
@@ -133,6 +142,12 @@ function GradCamAnalysisPage() {
           </button>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 text-red-500">
+            <p>{error}</p>
+          </div>
+        )}
       </div>
     </div>
   );

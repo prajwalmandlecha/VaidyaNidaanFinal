@@ -33,47 +33,56 @@ function ChatWithAIPage() {
 
   const handleSendMessage = async () => {
     if (!userMessage.trim() && !file) return; // Don't send empty message if no file and message
-  
+
+    // If it's the first query and no file is provided, show an error
+    if (isFirstQuery && !file) {
+      alert("Please upload an image for the first query.");
+      return;
+    }
+
     setMessages([...messages, { sender: "user", message: userMessage }]);
     setUserMessage("");
     setIsLoading(true);
-  
+
     const formData = new FormData();
     formData.append("text", userMessage); // Append the text message
-  
+
     // If there is a file, append it as well
     if (file) {
-      formData.append("file", file); 
+      formData.append("file", file);
     }
-  
-    let endpoint = "http://localhost:5000/api/query1"; // Default endpoint (for first query with file)
-    
-    // If there is no file, use the second endpoint
-    if (!file) {
-      endpoint = "http://localhost:5000/api/query2"; // Endpoint for follow-up question (only text)
-    }
-  
+
+    let endpoint = isFirstQuery
+      ? "http://localhost:5005/chatbot/upload" // Endpoint for first query with image
+      : "http://localhost:5005/chatbot/query"; // Endpoint for follow-up query (text-only)
+
     try {
       const response = await axios.post(endpoint, formData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data" },
+          "Content-Type": "multipart/form-data",
+        },
       });
-  
-      const aiMessage = response.data.message;
+
+      const aiMessage = response.data.analysisResult; // Updated to match backend response
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender: "ai", message: aiMessage, file: file, fileType: fileType }, // Include the file and file type in the message
       ]);
+
+      // After the first query, set isFirstQuery to false
+      if (isFirstQuery) {
+        setIsFirstQuery(false);
+      }
     } catch (error) {
       console.error("Error fetching AI response:", error);
+      alert("Failed to process the request. Please try again.");
     } finally {
       setIsLoading(false);
       setFile(null); // Clear file after sending
       setFileType(""); // Reset file type after sending
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#D0F0E0] via-white to-[#D0F0E0] flex justify-center items-center p-8">
