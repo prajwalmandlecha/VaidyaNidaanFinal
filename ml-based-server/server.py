@@ -13,11 +13,24 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import requests
 from io import BytesIO
+from langdetect import detect  # For language detection
+import cloudinary
+import cloudinary.uploader
 
 
 load_dotenv()
 
 app = Flask(__name__)
+
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+)
+print("Cloudinary Cloud Name:", os.getenv("CLOUDINARY_CLOUD_NAME"))
+print("Cloudinary API Key:", os.getenv("CLOUDINARY_API_KEY"))
+print("Cloudinary API Secret:", os.getenv("CLOUDINARY_API_SECRET"))
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -119,21 +132,44 @@ def process_image():
 
     # Download the image
     img_path = os.path.join(os.getcwd(), f"temp_{uuid.uuid4()}.jpg")
-    os.system(f"curl -o {img_path} {image_url}")
+    try:
+        response = requests.get(image_url)
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to download image"}), 400
+        with open(img_path, 'wb') as f:
+            f.write(response.content)
+    except Exception as e:
+        return jsonify({"error": f"Error downloading image: {str(e)}"}), 500
 
     # Generate the output path
     output_path = os.path.join(os.getcwd(), f"gradcam_output_{uuid.uuid4()}.png")
 
-    # Process the image
-    show_grad_cam_plus_plus(img_path, output_path, alpha=0.5)
-    print("Heatmap saved at:", output_path)
+     # Process the image
+    try:
+        show_grad_cam_plus_plus(img_path, output_path, alpha=0.5)
+        print("Heatmap saved at:", output_path)
+    except Exception as e:
+        return jsonify({"error": f"Error generating heatmap: {str(e)}"}), 500
 
-    # Clean up the temporary image
-    os.remove(img_path)
+    # Upload the heatmap to Cloudinary
+    try:
+        heatmap_upload_response = cloudinary.uploader.upload(output_path)
+        heatmap_url = heatmap_upload_response["secure_url"]
+    except Exception as e:
+        return jsonify({"error": f"Error uploading heatmap to Cloudinary: {str(e)}"}), 500
 
-    return jsonify({"heatmapPath": output_path})
+    # Clean up temporary files
+    try:
+        os.remove(img_path)
+        os.remove(output_path)
+    except Exception as e:
+        print(f"Error deleting temporary files: {str(e)}")
 
-# Endpoint for OpenAI GPT-4 Turbo with Vision
+    # Return the public URL of the heatmap
+    return jsonify({"heatmapUrl": heatmap_url})
+
+
+
 @app.route('/analyze', methods=['POST'])
 def analyze_image():
     # Get the text prompt and image URL from the request
@@ -143,6 +179,37 @@ def analyze_image():
 
     user_prompt = data['prompt']
     image_url = data['image_url']
+
+    # Detect the language of the user's prompt
+    try:
+        language_code = detect(user_prompt)
+    except:
+        language_code = 'en'  # Default to English if detection fails
+
+    # Map language codes to language names, including Marathi and Hindi
+    language_map = {
+        'en': 'English',
+        'hi': 'Hindi',
+        'mr': 'Marathi',
+        # Add more languages as needed
+    }
+    language = language_map.get(language_code, 'English')  # Default to English if language not found
+
+    # Define the structured prompt
+    structured_prompt = f"""
+        "{user_prompt}"
+        You are an AI assistant specialized in medical imaging and neurological disorders. 
+        A user has uploaded an MRI scan for Alzheimer's detection. 
+        Please analyze the image carefully, looking for signs such as:
+        - Brain atrophy (especially in the hippocampus and cortex).
+        - Ventricular enlargement.
+        - Abnormal white matter changes.
+
+        Based on this, provide a detailed yet easy-to-understand medical analysis of the MRI scan.
+        If Alzheimer's-related signs are detected, classify the severity (Mild, Moderate, Severe).
+        Include an explanation for your findings in simple terms.
+        PROVIDE YOUR RESPONSE IN THE SAME LANGUAGE AS user prompt
+    """
 
     # Define the text prompt and include the image URL
     prompt = [
@@ -162,14 +229,23 @@ def analyze_image():
     response = client.chat.completions.create(
         model="gpt-4-turbo",
         messages=[
-            {"role": "system", "content": "You are a helpful medical assistant."},
+            {"role": "system", "content": '''You are an AI assistant specialized in medical imaging and neurological disorders. 
+        A user has uploaded an MRI scan for Alzheimer's detection. 
+        Please analyze the image carefully, looking for signs such as:
+        - Brain atrophy (especially in the hippocampus and cortex).
+        - Ventricular enlargement.
+        - Abnormal white matter changes.
+
+        Based on this, provide a detailed yet easy-to-understand medical analysis of the MRI scan.
+        If Alzheimer's-related signs are detected, classify the severity (Mild, Moderate, Severe).
+        Include an explanation for your findings in simple terms.
+        PROVIDE YOUR RESPONSE IN THE SAME LANGUAGE AS user prompt'''},
             {"role": "user", "content": prompt}
         ]
     )
 
     # Return the response
     return jsonify({"response": response.choices[0].message.content})
-
 
 # Endpoint for MRI and Alzheimer's prediction
 @app.route('/predict', methods=['POST'])
@@ -206,11 +282,19 @@ def predict():
         # If it is an MRI, predict Alzheimer's
         img_array = preprocess_image(temp_path)
         prediction = alzheimer_model.predict(img_array)
-        probability = float(prediction[0][0]) * 100
-
+        classification = np.argmax(prediction)
+        if(classification == 1):
+            category = "Demented"
+        else:
+            category = "Non Demented"
+                    
+        # probability = float(prediction[0][0]) * 100
+        confidence = float(prediction[0][classification] * 100)
+        
         return jsonify({
+            "confidence": confidence,
             "prediction": "MRI",
-            "alzheimer_probability": probability
+            "category": category,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
