@@ -42,7 +42,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
         req.session.imageUrl = uploadResponse.url;
 
         // Forward the Cloudinary URL and text to the /analyze endpoint
-        const analyzeResponse = await axios.post("http://localhost:8080/analyze", {
+        const analyzeResponse = await axios.post(`${process.env.ML_API_URL}analyze`, {
             prompt: userText,
             image_url: uploadResponse.url,
         });

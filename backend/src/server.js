@@ -11,6 +11,8 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+const ML_API_URL = process.env.ML_API_URL;
+console.log("ML API URL:", ML_API_URL); // Ensure it's loaded correctly
 
 // Gracefully shut down the server and Prisma Client on process termination ie ctrl+c
 process.on("SIGINT", async () => {

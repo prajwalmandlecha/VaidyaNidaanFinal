@@ -229,10 +229,10 @@ const predictionPatient= async (req,res) => {
     });
 
     // Send the Cloudinary URL to the ML server for prediction
-    const mlServerResponse = await axios.post('http://localhost:8080/predict', {
+    const mlServerResponse = await axios.post(`${process.env.ML_API_URL}/predict`, {
         imageUrl: uploadResponse.url,
     });
-    const alzheimerProbability = mlServerResponse.data.alzheimer_probability;
+    const alzheimerProbability = mlServerResponse.data.confidence;
     // modified 2.0
 
     // // Get the current patient to retrieve existing scores
@@ -256,7 +256,11 @@ const predictionPatient= async (req,res) => {
         where: { id: patientId },
       });
     
-      const updatedScores = [...currentPatient.alzheimerPredictionScores, alzheimerProbability];
+      // Ensure alzheimerProbability is defined and filter out undefined values
+      const updatedScores = [
+        ...currentPatient.alzheimerPredictionScores.filter(score => score !== undefined),
+        alzheimerProbability
+      ].filter(score => score !== undefined);
     
       await prisma.patient.update({
         where: { id: patientId },
@@ -265,6 +269,7 @@ const predictionPatient= async (req,res) => {
         },
       });
     });
+    
 
     // Send the response back to the frontend
     return res.status(200).json({
@@ -281,10 +286,10 @@ const predictionPatient= async (req,res) => {
 
 };
 
-const gradcamPatient= async(req, res) =>{
+const gradcamPatient = async (req, res) => {
   try {
-    const patientId = parseInt(req.params.id,10);
-    
+    const patientId = parseInt(req.params.id, 10);
+
     // Verify patient exists
     const patient = await prisma.patient.findUnique({
       where: { id: patientId },
@@ -302,10 +307,12 @@ const gradcamPatient= async(req, res) =>{
 
     // Upload MRI to Cloudinary
     const mriCloudinaryResponse = await uploadOnCloudinary(localFilePath);
-    
+
     // Cleanup temp file
     try {
-      fs.unlinkSync(localFilePath);
+      if (fs.existsSync(localFilePath)) {
+        fs.unlinkSync(localFilePath);
+      }
     } catch (err) {
       console.error("Error deleting MRI temp file:", err);
     }
@@ -323,34 +330,19 @@ const gradcamPatient= async(req, res) =>{
     });
 
     // Process with Grad-CAM model
-    const gradcamResponse = await axios.post('http://localhost:8080/process', {
+    const gradcamResponse = await axios.post(`${process.env.ML_API_URL}/process`, {
       imageUrl: mriCloudinaryResponse.url,
     });
 
-    if (!gradcamResponse.data?.heatmapPath) {
+    if (!gradcamResponse.data?.heatmapUrl) {
       return res.status(500).json({ error: "Grad-CAM processing failed" });
     }
-
-    const heatmapLocalPath = gradcamResponse.data.heatmapPath;
-
-    // Upload Heatmap to Cloudinary
-    const heatmapCloudinaryResponse = await uploadOnCloudinary(heatmapLocalPath);
-    
-    // Cleanup heatmap temp file
-    try {
-      fs.unlinkSync(heatmapLocalPath);
-    } catch (err) {
-      console.error("Error deleting heatmap temp file:", err);
-    }
-
-    if (!heatmapCloudinaryResponse?.url) {
-      return res.status(500).json({ error: "Failed to upload heatmap to Cloudinary" });
-    }
+    const heatmapUrl = gradcamResponse.data.heatmapUrl;
 
     // Create Grad-CAM Scan record
     await prisma.gradCamScan.create({
       data: {
-        publicImageUrl: heatmapCloudinaryResponse.url,
+        publicImageUrl: heatmapUrl,
         mriScanId: mriScan.id,
         patientId: mriScan.patientId,
       },
@@ -359,15 +351,14 @@ const gradcamPatient= async(req, res) =>{
     return res.status(201).json({
       success: true,
       message: "MRI and Grad-CAM scans processed successfully",
-      heatmapUrl: heatmapCloudinaryResponse.url,
+      heatmapUrl: heatmapUrl,
       mriUrl: mriCloudinaryResponse.url,
     });
-
   } catch (error) {
     console.error("Error in gradcamPatient:", error);
-    
+
     // Cleanup any remaining temporary files
-    if (req.file?.path) {
+    if (req.file?.path && fs.existsSync(req.file.path)) {
       try {
         fs.unlinkSync(req.file.path);
       } catch (err) {
@@ -383,8 +374,6 @@ const gradcamPatient= async(req, res) =>{
     await prisma.$disconnect();
   }
 };
-
-
 module.exports = {
   addPatient,
   updatePatient,
