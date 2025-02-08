@@ -8,8 +8,8 @@ const AlzheimerDetectionPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-
   const { userId: patientId } = useParams();
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     const selectedFile = e.target.files[0];
@@ -40,20 +40,20 @@ const AlzheimerDetectionPage = () => {
 
     const formData = new FormData();
     formData.append('file', file);
-//change
-      try {
-        const response = await fetch(
-          `http://localhost:5005/api/patients/${patientId}/prediction`, // Use correct port and endpoint
-          {
-            method: 'POST',
-            body: formData,
-            headers: {
-              // Add authorization header
-              'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-            },
-            credentials: 'include' // Needed for cookies
-          }
-        );
+
+    try {
+      const response = await fetch(
+        `http://localhost:5005/api/patients/${patientId}/prediction`, // Use the correct port and endpoint
+        {
+          method: 'POST',
+          body: formData,
+          headers: {
+            // Add authorization header
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          },
+          credentials: 'include' // Needed for cookies
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to upload image.');
@@ -67,7 +67,6 @@ const AlzheimerDetectionPage = () => {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#D0F0E0] via-white to-[#D0F0E0] p-8 text-[#0A0A32] flex justify-center items-center">
@@ -125,7 +124,7 @@ const AlzheimerDetectionPage = () => {
           {error && <p className="text-red-500 text-center mt-4">{error}</p>}
         </motion.section>
 
-        {/* Prediction Result Section */}
+        {/* Prediction Result Section (Only Category and Confidence) */}
         {prediction && (
           <motion.section
             className="mt-12 text-center space-y-4"
@@ -135,16 +134,16 @@ const AlzheimerDetectionPage = () => {
           >
             <h2 className="text-4xl font-semibold text-[#0A0A32]">Prediction Result</h2>
             <div className="bg-[#f9f9f9] p-6 rounded-lg shadow-lg">
-              {prediction.prediction && (
-                <p className="text-xl text-[#0A0A32]">MRI: {prediction.prediction}</p>
-              )}
-              {prediction.alzheimer_probability !== undefined && (
+              {/* Displaying Category and Confidence only */}
+              {prediction.category && (
                 <p className="text-xl text-[#0A0A32]">
-                  Alzheimer Probability: {prediction.alzheimer_probability.toFixed(2)}%
+                  Category: {prediction.category}
                 </p>
               )}
-              {prediction.message && (
-                <p className="text-xl text-[#0A0A32]">{prediction.message}</p>
+              {prediction.confidence !== undefined && (
+                <p className="text-xl text-[#0A0A32]">
+                  Confidence: {prediction.confidence.toFixed(2)}%
+                </p>
               )}
             </div>
           </motion.section>
