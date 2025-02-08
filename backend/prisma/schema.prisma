@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Doctor {
+  id        Int       @id @default(autoincrement()) // Auto-incrementing primary key
+  name      String    @db.VarChar(255) // Doctor's name
+  email     String    @unique // Unique email for the doctor
+  password  String    @db.VarChar(255) // Password
+  specialty String    @db.VarChar(255) // Doctor's specialty
+  patients  Patient[] @relation("DoctorToPatient") // One-to-many relationship with patients
+  createdAt DateTime  @default(now()) // Auto-generated timestamp for creation
+  updatedAt DateTime  @updatedAt // Auto-updated timestamp for modifications
+}
+
+model Patient {
+  id                        Int          @id @default(autoincrement())
+  name                      String       @db.VarChar(255)
+  gender                    String       @db.VarChar(10)
+  age                       Int
+  smoker                    String       @db.VarChar(3)
+  alcoholConsumption        String       @db.VarChar(10)
+  neurologicalCondition     String       @db.VarChar(3)
+  alzheimerPredictionScores Float[]
+  mriScans                  MriScan[]    @relation("PatientToMriScan")
+  gradCamScans              GradCamScan[] @relation("PatientToGradCamScan")
+  doctorId                  Int
+  doctor                    Doctor       @relation("DoctorToPatient", fields: [doctorId], references: [id])
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+}
+
+model MriScan {
+  id             Int          @id @default(autoincrement())
+  publicImageUrl String       @db.Text
+  patientId      Int
+  patient        Patient      @relation("PatientToMriScan", fields: [patientId], references: [id])
+  gradCamScan    GradCamScan?
+  createdAt      DateTime     @default(now()) // Auto-generated timestamp for creation
+  updatedAt      DateTime?     @updatedAt // Auto-updated timestamp for modifications
+}
+
+model GradCamScan {
+  id             Int     @id @default(autoincrement())
+  publicImageUrl String  @db.Text
+  mriScan        MriScan @relation(fields: [mriScanId], references: [id])
+  mriScanId      Int     @unique
+  patientId      Int
+  patient        Patient @relation("PatientToGradCamScan", fields: [patientId], references: [id])
+  createdAt      DateTime @default(now()) // Auto-generated timestamp for creation
+  updatedAt      DateTime? @updatedAt // Auto-updated timestamp for modifications
+}
