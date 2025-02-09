@@ -39,7 +39,7 @@ function GradCamAnalysisPage() {
     formData.append("file", imageFile); // Append the file with the correct key ("file")
 
     try {
-      const response = await fetch(`http://localhost:5005/api/patients/${userId}/gradcam`, {
+      const response = await fetch(`https://skilled-moth-greatly.ngrok-free.app/api/patients/${userId}/gradcam`, {
         method: 'POST',
         body: formData,
         headers: {

@@ -1,68 +1,85 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const AlzheimerDetectionPage = () => {
-  const [file, setFile] = useState(null);
-  const [prediction, setPrediction] = useState(null);
+  const [imgFile, setImgFile] = useState(null);
+  const [hdrFile, setHdrFile] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const { userId: patientId } = useParams();
+  const navigate = useNavigate();
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       const fileType = selectedFile.type;
-      const validImageTypes = ['image/jpeg', 'image/png'];
+      const fileName = selectedFile.name;
+      const validImgTypes = ['application/octet-stream'];  // Accepting .img files
+      const validHdrTypes = ['application/octet-stream'];  // Accepting .hdr files
 
-      if (!validImageTypes.includes(fileType)) {
-        setError('Invalid file type. Please upload a JPEG or PNG image.');
-        setFile(null);
-        return;
+      if (e.target.name === 'img') {
+        if (!validImgTypes.includes(fileType) && !fileName.endsWith('.img')) {
+          setError('Invalid file type. Please upload a .img file.');
+          setImgFile(null);
+          return;
+        }
+        setImgFile(selectedFile);
+        setError(null);
+      } else if (e.target.name === 'hdr') {
+        if (!validHdrTypes.includes(fileType) && !fileName.endsWith('.hdr')) {
+          setError('Invalid file type. Please upload a .hdr file.');
+          setHdrFile(null);
+          return;
+        }
+        setHdrFile(selectedFile);
+        setError(null);
       }
-
-      setFile(selectedFile);
-      setError(null);
     }
   };
 
   const handleSubmit = async () => {
-    if (!file) {
-      setError('Please select an image file.');
+    if (!imgFile || !hdrFile) {
+      setError('Please select both .img and .hdr files.');
       return;
     }
-
+  
     setLoading(true);
     setError(null);
-    setPrediction(null);
-
+  
     const formData = new FormData();
-    formData.append('file', file);
-
+    formData.append('imgFile', imgFile);
+    formData.append('hdrFile', hdrFile);
+  
     try {
       const response = await fetch(
-        `http://localhost:5005/api/patients/${patientId}/prediction`, // Use the correct port and endpoint
+        `https://skilled-moth-greatly.ngrok-free.app/analyze`,
         {
           method: 'POST',
           body: formData,
           headers: {
-            // Add authorization header
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
           },
-          credentials: 'include' // Needed for cookies
+          credentials: 'include',
         }
       );
-
+  
       if (!response.ok) {
-        throw new Error('Failed to upload image.');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload files.');
       }
-
+  
       const data = await response.json();
-      setPrediction(data.prediction);
+      navigate(`/combined-report/${patientId}`, {
+        state: {
+          predictionData: data.prediction,
+          uploadedImgFile: imgFile,
+          uploadedHdrFile: hdrFile,
+        },
+      });
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -70,14 +87,12 @@ const AlzheimerDetectionPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#D0F0E0] via-white to-[#D0F0E0] p-8 text-[#0A0A32] flex justify-center items-center">
-      {/* Main Card Layout */}
       <motion.div
         className="bg-white shadow-2xl rounded-xl p-10 w-full max-w-4xl"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
       >
-        {/* Header Section */}
         <motion.header
           className="text-center space-y-8"
           initial={{ opacity: 0, y: -50 }}
@@ -90,7 +105,6 @@ const AlzheimerDetectionPage = () => {
           </p>
         </motion.header>
 
-        {/* File Upload Section */}
         <motion.section
           className="mt-12 text-center"
           initial={{ opacity: 0 }}
@@ -98,11 +112,23 @@ const AlzheimerDetectionPage = () => {
           transition={{ duration: 1 }}
         >
           <div className="mb-6">
+            <h2 className="text-2xl font-semibold text-[#0A0A32] pb-2">Upload MRI Scan as a .img and .hdr respectively</h2>
             <input
               type="file"
-              accept="image/*"
+              name="img"
+              accept=".img"
               onChange={handleFileChange}
               className="block w-full text-sm text-[#0A0A32] border border-[#0A0A32] rounded-md py-3 px-4"
+              placeholder='Upload .img file'
+            />
+
+            <input
+              type="file"
+              name="hdr"
+              accept=".hdr"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-[#0A0A32] border border-[#0A0A32] rounded-md py-3 px-4 mt-4"
+              placeholder='Upload .hdr file'
             />
           </div>
 
@@ -124,32 +150,6 @@ const AlzheimerDetectionPage = () => {
           {error && <p className="text-red-500 text-center mt-4">{error}</p>}
         </motion.section>
 
-        {/* Prediction Result Section (Only Category and Confidence) */}
-        {prediction && (
-          <motion.section
-            className="mt-12 text-center space-y-4"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 1 }}
-          >
-            <h2 className="text-4xl font-semibold text-[#0A0A32]">Prediction Result</h2>
-            <div className="bg-[#f9f9f9] p-6 rounded-lg shadow-lg">
-              {/* Displaying Category and Confidence only */}
-              {prediction.category && (
-                <p className="text-xl text-[#0A0A32]">
-                  Category: {prediction.category}
-                </p>
-              )}
-              {prediction.confidence !== undefined && (
-                <p className="text-xl text-[#0A0A32]">
-                  Confidence: {prediction.confidence.toFixed(2)}%
-                </p>
-              )}
-            </div>
-          </motion.section>
-        )}
-
-        {/* Footer Section */}
         <footer className="mt-12 text-center text-[#0A0A32] opacity-80 text-lg">
           <p>&copy; 2025 Vaidya Nidaan. All Rights Reserved.</p>
         </footer>
