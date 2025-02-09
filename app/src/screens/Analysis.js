@@ -10,41 +10,100 @@ import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { uploadApi } from "../services/apiService";
-import { gradcam, prediction } from "../utils/Patients";
+import { fslData, gradcam, prediction } from "../utils/Patients";
+import axios from "axios";
 
 const GradCamDetection = ({ navigation, route }) => {
   const { patient } = route.params;
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile2, setSelectedFile2] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const pickDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({
-      type: ["image/png", "image/jpeg", "image/jpg"],
+      type: ["*/*"],
     });
     if (!result.canceled) {
-      setSelectedFile(result.assets[0]);
+      const file = result.assets[0];
+      const fileExtension = file.name.split(".").pop().toLowerCase();
+      if (fileExtension === "img") {
+        setSelectedFile(file);
+      } else {
+        alert("Please upload a .img file");
+      }
     }
   };
 
-  const getHeatmap = async (file) => {
-    const formData = new FormData();
-    formData.append("file", {
-      uri: file.uri,
-      type: file.mimeType,
-      name: file.name,
+  const pickDocument2 = async () => {
+    let result = await DocumentPicker.getDocumentAsync({
+      type: ["*/*"],
     });
+    if (!result.canceled) {
+      const file = result.assets[0];
+      const fileExtension = file.name.split(".").pop().toLowerCase();
+      if (fileExtension === "hdr") {
+        setSelectedFile2(file);
+      } else {
+        alert("Please upload a .hdr file");
+      }
+    }
+  };
+
+  const getHeatmap = async () => {
+    console.log("Selected Files:", selectedFile, selectedFile2);
+    const formData = new FormData();
+    try {
+      formData.append("hdr_file", {
+        uri: selectedFile2.uri,
+        name: selectedFile2.name,
+        type: selectedFile2.mimeType || "application/octet-stream",
+      });
+      formData.append("img_file", {
+        uri: selectedFile.uri,
+        name: selectedFile.name,
+        type: selectedFile.mimeType || "application/octet-stream",
+      });
+      console.log("Form Data:", formData);
+    } catch (error) {
+      console.error("Error preparing form data:", error);
+      setLoading(false);
+      return;
+    }
 
     try {
+      const fslResponse = await axios.post(
+        "https://skilled-moth-greatly.ngrok-free.app/analyze",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      if (!fslResponse && !fslResponse.data) {
+        throw new Error("Invalid response from FSL API");
+      }
+      console.log("FSL Response:", fslResponse.data);
+
+      const jpgData = new FormData();
+      jpgData.append("file", {
+        uri: fslResponse.data.image_url,
+        type: "image/jpg",
+        name: "image.jpg",
+      });
+
       const [heatmapResponse, predictionResponse] = await Promise.all([
-        gradcam(patient.id, formData),
-        prediction(patient.id, formData),
+        gradcam(patient.id, jpgData),
+        prediction(patient.id, jpgData),
       ]);
+
       console.log("Upload successful:", heatmapResponse, predictionResponse);
       if (heatmapResponse && predictionResponse) {
         navigation.navigate("Result", {
           predictionData: predictionResponse,
           originalImage: heatmapResponse.mriUrl,
           heatmapImage: heatmapResponse.heatmapUrl,
+          fslData: fslResponse.data,
         });
       }
     } catch (error) {
@@ -54,9 +113,9 @@ const GradCamDetection = ({ navigation, route }) => {
     }
   };
 
-  const detectMRI = async (selectedFile) => {
+  const detectMRI = async () => {
     setLoading(true);
-    getHeatmap(selectedFile);
+    await getHeatmap();
   };
 
   return (
@@ -67,7 +126,14 @@ const GradCamDetection = ({ navigation, route }) => {
       <TouchableOpacity onPress={pickDocument} style={styles.uploadButton}>
         <Ionicons name="document-attach" size={24} color="#07054A" />
         <Text style={styles.buttonText}>
-          {selectedFile ? "Replace File" : "Choose File"}
+          {selectedFile ? "Replace img File" : "Choose img File"}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={pickDocument2} style={styles.uploadButton}>
+        <Ionicons name="document-attach" size={24} color="#07054A" />
+        <Text style={styles.buttonText}>
+          {selectedFile2 ? "Replace hdr File" : "Choose hdr File"}
         </Text>
       </TouchableOpacity>
 
@@ -89,14 +155,32 @@ const GradCamDetection = ({ navigation, route }) => {
         </View>
       )}
 
+      {selectedFile2 && (
+        <View style={styles.fileInfo}>
+          {/* <Image
+            source={{ uri: selectedFile.uri }}
+            style={{ height: "100%", width: "100%", resizeMode: "contain" }}
+          /> */}
+          <Ionicons name="document-text" size={20} color="#64748B" />
+          <View style={styles.fileDetails}>
+            <Text style={styles.fileName} numberOfLines={1}>
+              {selectedFile2.name}
+            </Text>
+            <Text style={styles.fileSize}>
+              {(selectedFile2.size / 1024).toFixed(2)} KB
+            </Text>
+          </View>
+        </View>
+      )}
+
       <TouchableOpacity
         style={[
           styles.analyseButton,
-          !selectedFile && styles.disabledButton,
+          [(!selectedFile || !selectedFile2) && styles.disabledButton],
           loading && styles.disabledButton,
         ]}
-        onPress={() => detectMRI(selectedFile)}
-        disabledButton={loading || !selectedFile}
+        onPress={() => detectMRI()}
+        disabled={loading || !selectedFile || !selectedFile2}
       >
         {loading ? (
           <ActivityIndicator color="white" size="small" />

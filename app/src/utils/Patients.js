@@ -1,4 +1,4 @@
-import api, { fileApi } from "../services/apiService";
+import api, { fileApi, fslApi } from "../services/apiService";
 
 export const getPatients = async () => {
   try {
@@ -72,7 +72,7 @@ export const prediction = async (id, formData) => {
     console.log("Upload successful:", response.data);
     return response.data;
   } catch (error) {
-    alert("Error uploading file: " + error.response.data.error);
+    alert("Error uploading file: " + error);
     return;
   }
 };
@@ -88,3 +88,15 @@ export const gradcam = async (id, formData) => {
   }
 };
 
+export const fslData = async (formData) => {
+  try {
+    console.log("lol");
+    const response = await fslApi.post("/", formData);
+    console.log("kk");
+    console.log("Upload successful:", response.data);
+    return response.data;
+  } catch (error) {
+    alert("Error uploading file: ", error);
+    return;
+  }
+};

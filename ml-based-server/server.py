@@ -24,13 +24,13 @@ app = Flask(__name__)
 
 # Configure Cloudinary
 cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+    cloud_name="dfs4e1sxz",
+    api_key="986462337735724",
+    api_secret="OByOxWURzpHUsKfAONfXMmnQJ0k"
 )
-print("Cloudinary Cloud Name:", os.getenv("CLOUDINARY_CLOUD_NAME"))
-print("Cloudinary API Key:", os.getenv("CLOUDINARY_API_KEY"))
-print("Cloudinary API Secret:", os.getenv("CLOUDINARY_API_SECRET"))
+# print("Cloudinary Cloud Name:", os.getenv("CLOUDINARY_CLOUD_NAME"))
+# print("Cloudinary API Key:", os.getenv("CLOUDINARY_API_KEY"))
+# print("Cloudinary API Secret:", os.getenv("CLOUDINARY_API_SECRET"))
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

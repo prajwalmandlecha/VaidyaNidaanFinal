@@ -65,31 +65,9 @@ function ChatWithAIPage() {
       });
 
       const aiMessage = response.data.analysisResult; // Updated to match backend response
-
-      // Format the AI's response for better display
-      const formattedMessage = (
-        <div className="text-left">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">MRI Analysis Results:</h3>
-          <ul className="list-disc list-inside space-y-2">
-            <li>
-              <strong>Brain Atrophy:</strong> The image shows shrinkage in certain areas of the brain, particularly in the hippocampus and cortex. This is a common symptom of Alzheimer's disease, where brain cells die and the brain shrinks.
-            </li>
-            <li>
-              <strong>Ventricular Expansion:</strong> The ventricles (empty spaces in the brain containing cerebrospinal fluid) appear enlarged. This is a result of brain shrinkage.
-            </li>
-            <li>
-              <strong>White Matter Changes:</strong> There are minor irregular changes in the white matter, but these are not significant.
-            </li>
-          </ul>
-          <p className="mt-4 text-gray-700">
-            Based on the analysis, the patient shows moderate signs of Alzheimer's disease. Brain atrophy may affect memory and cognitive function, and ventricular enlargement is clearly visible. Regular follow-ups and appropriate medication are recommended. Consultation with a neurologist is advised.
-          </p>
-        </div>
-      );
-
       setMessages((prevMessages) => [
         ...prevMessages,
-        { sender: "ai", message: formattedMessage, file: file, fileType: fileType }, // Include the file and file type in the message
+        { sender: "ai", message: aiMessage, file: file, fileType: fileType }, // Include the file and file type in the message
       ]);
 
       // After the first query, set isFirstQuery to false
@@ -129,7 +107,7 @@ function ChatWithAIPage() {
               >
                 {msg.sender === "user" ? "You:" : "AI:"}
               </p>
-              <div className="text-gray-800">{msg.message}</div>
+              <p className="text-gray-800">{msg.message}</p>
 
               {/* Display the uploaded file (image or audio) */}
               {msg.file && (
