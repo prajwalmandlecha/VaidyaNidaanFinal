@@ -229,8 +229,6 @@ const predictionPatient= async (req,res) => {
     });
 
     // Send the Cloudinary URL to the ML server for prediction
-    console.log('API URL:', `${baseURL}/predict`);
-
     const mlServerResponse = await axios.post(`${process.env.ML_API_URL}/predict`, {
         imageUrl: uploadResponse.url,
     });
