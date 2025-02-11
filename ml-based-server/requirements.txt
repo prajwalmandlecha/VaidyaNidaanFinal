@@ -1,0 +1,12 @@
+Flask
+tensorflow
+Pillow
+numpy
+matplotlib
+openai
+python-dotenv
+requests
+langdetect
+cloudinary
+nibabel
+opencv-python-headless

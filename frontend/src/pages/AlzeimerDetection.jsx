@@ -15,34 +15,40 @@ const AlzheimerDetectionPage = () => {
     const selectedFile = e.target.files[0];
 
     if (selectedFile) {
-      const fileType = selectedFile.type;
-      const fileName = selectedFile.name;
-      const validImgTypes = ["application/octet-stream"]; // Accepting .img files
-      const validHdrTypes = ["application/octet-stream"]; // Accepting .hdr files
+      const fileName = selectedFile.name.toLowerCase();
 
       if (e.target.name === "img") {
-        if (!validImgTypes.includes(fileType) && !fileName.endsWith(".img")) {
-          setError("Invalid file type. Please upload a .img file.");
+        if (!fileName.endsWith(".img")) {
+          setError("Please upload a valid .img file");
           setImgFile(null);
           return;
         }
         setImgFile(selectedFile);
-        setError(null);
+        // Only clear error if both files are present
+        if (hdrFile) setError(null);
       } else if (e.target.name === "hdr") {
-        if (!validHdrTypes.includes(fileType) && !fileName.endsWith(".hdr")) {
-          setError("Invalid file type. Please upload a .hdr file.");
+        if (!fileName.endsWith(".hdr")) {
+          setError("Please upload a valid .hdr file");
           setHdrFile(null);
           return;
         }
         setHdrFile(selectedFile);
-        setError(null);
+        // Only clear error if both files are present
+        if (imgFile) setError(null);
       }
     }
   };
 
   const handleSubmit = async () => {
-    if (!imgFile || !hdrFile) {
-      setError("Please select both .img and .hdr files.");
+    // Validate both files are present
+    if (!imgFile && !hdrFile) {
+      setError("Please select both .img and .hdr files");
+      return;
+    } else if (!imgFile) {
+      setError("Please select a .img file");
+      return;
+    } else if (!hdrFile) {
+      setError("Please select a .hdr file");
       return;
     }
 
@@ -50,12 +56,12 @@ const AlzheimerDetectionPage = () => {
     setError(null);
 
     const formData = new FormData();
-    formData.append("imgFile", imgFile);
-    formData.append("hdrFile", hdrFile);
+    formData.append("img_file", imgFile);
+    formData.append("hdr_file", hdrFile);
 
     try {
       const response = await fetch(
-        `https://skilled-moth-greatly.ngrok-free.app/analyze`,
+        `https://skilled-moth-greatly.ngrok-free.app/fslanalyze`,
         {
           method: "POST",
           body: formData,
@@ -68,19 +74,35 @@ const AlzheimerDetectionPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to upload files.");
+        throw new Error(errorData.message || "Failed to upload files");
       }
-
       const data = await response.json();
-      navigate(`/combined-report/${patientId}`, {
+      navigate(`/report/${patientId}`, {
         state: {
-          predictionData: data.prediction,
+          predictionData: {
+            basic: {
+              brainVolume: data.data.basic.brain_volume_mm3,
+              maxIntensity: data.data.basic.max_intensity,
+              meanIntensity: data.data.basic.mean_intensity,
+              medianIntensity: data.data.basic.median_intensity,
+              minIntensity: data.data.basic.min_intensity,
+              stdDeviation: data.data.basic.std_deviation,
+            },
+            tissueVolumes: {
+              cerebroSpinalFluid: data.data.tissue_volumes.csf_mm3,
+              grayMatter: data.data.tissue_volumes.gm_mm3,
+              whiteMatter: data.data.tissue_volumes.wm_mm3,
+            },
+          },
+          processedImageUrl: data.image_url,
           uploadedImgFile: imgFile,
           uploadedHdrFile: hdrFile,
+          status: data.status,
         },
       });
     } catch (err) {
-      setError(err.message || "An error occurred. Please try again.");
+      console.error("Upload error:", err);
+      setError(err.message || "An error occurred while processing the files");
     } finally {
       setLoading(false);
     }

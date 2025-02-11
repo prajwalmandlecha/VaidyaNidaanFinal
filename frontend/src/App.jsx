@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -12,6 +11,7 @@ import AlzheimerDetectionPage from './pages/AlzeimerDetection';
 import GradCamAnalysisPage from './pages/GRAD-CAM';
 import ChatWithAIPage from './pages/Chatbot';
 import FileUpload from './pages/temp';
+import CombinedReportPage from './pages/ReportGeneration';
 function App() {
   return (
     <Router>
@@ -25,6 +25,7 @@ function App() {
           <Route path="/alzheimers-detection/:userId" element={<AlzheimerDetectionPage />} />
           <Route path="/chat-with-ai/:userId" element={<ChatWithAIPage />} />
           <Route path="/file-upload" element={<FileUpload />} />
+          <Route path="/report/:userId" element={<CombinedReportPage />} />
           {/* Protected Routes */}
           <Route
             path="/dashboard"

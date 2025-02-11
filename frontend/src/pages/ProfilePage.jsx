@@ -18,11 +18,14 @@ function ProfilePage() {
           throw new Error("Authentication token is missing");
         }
 
-        const response = await axios.get(`http://localhost:5005/api/patients/${userId}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `http://localhost:5005/api/patients/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         setPatientData(response.data.patient);
         setEditedData(response.data.patient);
@@ -43,7 +46,6 @@ function ProfilePage() {
   const handleDetectAlzheimer = () => {
     navigate(`/alzheimers-detection/${userId}`);
   };
-  
 
   const handleChatWithAI = () => {
     navigate(`/chat-with-ai/${userId}`);
@@ -69,7 +71,7 @@ function ProfilePage() {
         editedData,
         {
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -83,7 +85,9 @@ function ProfilePage() {
 
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
-    return date instanceof Date && !isNaN(date) ? date.toLocaleDateString() : 'Invalid Date';
+    return date instanceof Date && !isNaN(date)
+      ? date.toLocaleDateString()
+      : "Invalid Date";
   };
 
   const handleBackToDashboard = () => {
@@ -122,7 +126,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="name"
-                  value={editedData?.name || ''}
+                  value={editedData?.name || ""}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#4caf50] transition duration-300"
                 />
@@ -136,7 +140,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="age"
-                  value={editedData?.age || ''}
+                  value={editedData?.age || ""}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#4caf50] transition duration-300"
                 />
@@ -150,7 +154,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="gender"
-                  value={editedData?.gender || ''}
+                  value={editedData?.gender || ""}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#4caf50] transition duration-300"
                 />
@@ -164,7 +168,7 @@ function ProfilePage() {
                 <input
                   type="text"
                   name="smoker"
-                  value={editedData?.smoker || ''}
+                  value={editedData?.smoker || ""}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#4caf50] transition duration-300"
                 />
@@ -177,40 +181,52 @@ function ProfilePage() {
           <div className="flex flex-col space-y-4">
             {/* Right side details */}
             <div>
-              <p className="text-gray-700 font-semibold">Alcohol Consumption:</p>
+              <p className="text-gray-700 font-semibold">
+                Alcohol Consumption:
+              </p>
               {isEditing ? (
                 <input
                   type="text"
                   name="alcoholConsumption"
-                  value={editedData?.alcoholConsumption || ''}
+                  value={editedData?.alcoholConsumption || ""}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#4caf50] transition duration-300"
                 />
               ) : (
-                <p className="text-gray-900">{patientData.alcoholConsumption}</p>
+                <p className="text-gray-900">
+                  {patientData.alcoholConsumption}
+                </p>
               )}
             </div>
             <div>
-              <p className="text-gray-700 font-semibold">Neurological Condition:</p>
+              <p className="text-gray-700 font-semibold">
+                Neurological Condition:
+              </p>
               {isEditing ? (
                 <input
                   type="text"
                   name="neurologicalCondition"
-                  value={editedData?.neurologicalCondition || ''}
+                  value={editedData?.neurologicalCondition || ""}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 p-3 rounded-lg mt-1 focus:ring-2 focus:ring-[#4caf50] transition duration-300"
                 />
               ) : (
-                <p className="text-gray-900">{patientData.neurologicalCondition}</p>
+                <p className="text-gray-900">
+                  {patientData.neurologicalCondition}
+                </p>
               )}
             </div>
             <div>
               <p className="text-gray-700 font-semibold">Created At:</p>
-              <p className="text-gray-900">{formatDate(patientData.createdAt)}</p>
+              <p className="text-gray-900">
+                {formatDate(patientData.createdAt)}
+              </p>
             </div>
             <div>
               <p className="text-gray-700 font-semibold">Updated At:</p>
-              <p className="text-gray-900">{formatDate(patientData.updatedAt)}</p>
+              <p className="text-gray-900">
+                {formatDate(patientData.updatedAt)}
+              </p>
             </div>
           </div>
         </div>
@@ -246,54 +262,25 @@ function ProfilePage() {
           {/* Feature Buttons */}
           <div className="flex space-x-4">
             <button
-                onClick={handleDetectAlzheimer} 
-                className="px-6 py-3 text-white  bg-[#0A0A32] rounded-lg shadow-md hover:bg-[#0277bd] transition duration-300">
-                Detect Alzheimer's
+              onClick={handleDetectAlzheimer}
+              className="px-6 py-3 text-white  bg-[#0A0A32] rounded-lg shadow-md hover:bg-[#0277bd] transition duration-300"
+            >
+              Detect Alzheimer's
             </button>
             <button
-                onClick={handleChatWithAI} 
-                className="px-6 py-3 text-white bg-[#0A0A32] rounded-lg shadow-md hover:bg-[#0277bd] transition duration-300">
-                Chat with AI
+              onClick={handleChatWithAI}
+              className="px-6 py-3 text-white bg-[#0A0A32] rounded-lg shadow-md hover:bg-[#0277bd] transition duration-300"
+            >
+              Chat with AI
             </button>
             <button
-                onClick={handleGradCAMAnalysis} 
-                className="px-6 py-3 text-white bg-[#0A0A32] rounded-lg shadow-md hover:bg-[#0277bd] transition duration-300">
-                Grad-CAM Analysis
+              onClick={handleGradCAMAnalysis}
+              className="px-6 py-3 text-white bg-[#0A0A32] rounded-lg shadow-md hover:bg-[#0277bd] transition duration-300"
+            >
+              Grad-CAM Analysis
             </button>
           </div>
         </div>
-
-        {/* Patient Data Tables */}
-        <div className="mt-8">
-          <table className="min-w-full table-auto mb-6">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-gray-600">Condition</th>
-                <th className="px-6 py-3 text-left text-gray-600">Details</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="px-6 py-3 text-gray-700">Name</td>
-                <td className="px-6 py-3 text-gray-700">{patientData.name}</td>
-              </tr>
-              <tr>
-                <td className="px-6 py-3 text-gray-700">Age</td>
-                <td className="px-6 py-3 text-gray-700">{patientData.age}</td>
-              </tr>
-              <tr>
-                <td className="px-6 py-3 text-gray-700">Gender</td>
-                <td className="px-6 py-3 text-gray-700">{patientData.gender}</td>
-              </tr>
-              <tr>
-                <td className="px-6 py-3 text-gray-700">Smoker</td>
-                <td className="px-6 py-3 text-gray-700">{patientData.smoker}</td>
-              </tr>
-              {/* Add other rows here */}
-            </tbody>
-          </table>
-        </div>
-
       </motion.div>
     </div>
   );

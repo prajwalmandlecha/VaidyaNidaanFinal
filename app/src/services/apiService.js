@@ -27,10 +27,6 @@ export const chatbotApi = axios.create({
   },
 });
 
-export const fslApi = axios.create({
-  baseURL: "http://172.19.208.234:5000/analyze",
-});
-
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItem("jwt");

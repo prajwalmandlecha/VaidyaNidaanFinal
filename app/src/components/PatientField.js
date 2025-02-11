@@ -13,6 +13,7 @@ export default PatientField;
 
 const styles = StyleSheet.create({
   field: {
+    flex: 1,
     backgroundColor: "white",
     borderColor: "#e0e0e0",
     width: "100%",

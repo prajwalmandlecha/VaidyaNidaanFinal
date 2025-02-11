@@ -9,8 +9,7 @@ import {
 import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { uploadApi } from "../services/apiService";
-import { fslData, gradcam, prediction } from "../utils/Patients";
+import { gradcam, prediction } from "../utils/Patients";
 import axios from "axios";
 
 const GradCamDetection = ({ navigation, route }) => {
@@ -72,7 +71,7 @@ const GradCamDetection = ({ navigation, route }) => {
 
     try {
       const fslResponse = await axios.post(
-        "https://skilled-moth-greatly.ngrok-free.app/analyze",
+        "https://skilled-moth-greatly.ngrok-free.app/fslanalyze",
         formData,
         {
           headers: {

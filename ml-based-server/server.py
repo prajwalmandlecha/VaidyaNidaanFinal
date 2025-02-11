@@ -16,6 +16,10 @@ from io import BytesIO
 from langdetect import detect  # For language detection
 import cloudinary
 import cloudinary.uploader
+import nibabel as nib
+import cv2
+import tempfile
+import shutil
 
 
 load_dotenv()
@@ -24,13 +28,11 @@ app = Flask(__name__)
 
 # Configure Cloudinary
 cloudinary.config(
-    cloud_name="dfs4e1sxz",
-    api_key="986462337735724",
-    api_secret="OByOxWURzpHUsKfAONfXMmnQJ0k"
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_CLOUD_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_CLOUD_API_SECRET")
 )
-# print("Cloudinary Cloud Name:", os.getenv("CLOUDINARY_CLOUD_NAME"))
-# print("Cloudinary API Key:", os.getenv("CLOUDINARY_API_KEY"))
-# print("Cloudinary API Secret:", os.getenv("CLOUDINARY_API_SECRET"))
+
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -302,6 +304,146 @@ def predict():
         # Clean up: Delete the temporary file
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+@app.route('/fslanalyze', methods=['POST'])
+def analyze_mri():
+    print("Received /analyze request")
+    if 'hdr_file' not in request.files or 'img_file' not in request.files:
+        return jsonify({"error": "Both .hdr and .img files are required"}), 400
+
+    hdr_file = request.files['hdr_file']
+    img_file = request.files['img_file']
+
+    if hdr_file.filename == '' or img_file.filename == '':
+        return jsonify({"error": "No files selected"}), 400
+
+    temp_dir = tempfile.mkdtemp()
+    unique_id = uuid.uuid4().hex
+    hdr_path = os.path.join(temp_dir, f"{unique_id}.hdr")
+    img_path = os.path.join(temp_dir, f"{unique_id}.img")
+
+    try:
+        # Save uploaded files
+        hdr_file.save(hdr_path)
+        img_file.save(img_path)
+        print(f"Saved HDR file to {hdr_path} and IMG file to {img_path}")
+
+        # Generate medical report
+        report = generate_medical_report(img_path)
+        print(report);
+        if 'error' in report:
+            return jsonify(report), 500
+
+        # Convert to JPEG and upload
+        try:
+            image_url = convert_to_jpg(unique_id, img_path, temp_dir)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+        return jsonify({
+            "status": "success",
+            "data": report,
+            "image_url": image_url
+        })
+
+    except Exception as e:
+        return jsonify({
+            "error": f"Processing failed: {str(e)}",
+            "status": "error"
+        }), 500
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        print(f"Cleaned up temporary directory {temp_dir}")
+        
+def generate_medical_report(mri_file):
+    print(f"Generating medical report for {mri_file}")
+    # Run basic statistics
+    command = f"fslstats {mri_file} -R -M -V -P 50 -S"
+    result = os.popen(command).read().strip().split()
+    print(f"Basic statistics result: {result}")
+
+    if len(result) < 6:
+        return {"error": "Unable to extract basic statistics from the MRI scan"}
+
+    # Parse numerical values
+    try:
+        stats = {
+            "basic": {
+                "min_intensity": float(result[0]),
+                "max_intensity": float(result[1]),
+                "mean_intensity": float(result[2]),
+                "brain_volume_mm3": float(result[3]),
+                "median_intensity": float(result[4]),
+                "std_deviation": float(result[5])
+            }
+        }
+    except ValueError:
+        return {"error": "Numerical data parsing failed"}
+
+    # Run FAST segmentation
+    base = os.path.splitext(mri_file)[0]
+    fast_prefix = base + "_fast"
+    os.system(f"fast -t 1 -o {fast_prefix} {mri_file}")
+    print(f"FAST segmentation output prefix: {fast_prefix}")
+
+    seg_file = fast_prefix + "_seg.nii.gz"
+    if not os.path.exists(seg_file):
+        return {"error": "FAST segmentation failed"}
+
+    # Get tissue volumes
+    def get_tissue_volume(lower, upper):
+        output = os.popen(f"fslstats {seg_file} -l {lower} -u {upper} -V").read().strip().split()
+        print(f"Tissue volume for range {lower}-{upper}: {output}")
+        return float(output[1]) if len(output) >= 2 else 0.0
+
+    try:
+        stats["tissue_volumes"] = {
+            "csf_mm3": get_tissue_volume(0.5, 1.5),
+            "gm_mm3": get_tissue_volume(1.5, 2.5),
+            "wm_mm3": get_tissue_volume(2.5, 3.5)
+        }
+    except Exception as e:
+        return {"error": f"Tissue volume calculation failed: {str(e)}"}
+
+    return stats
+
+def convert_to_jpg(unique_id, img_path, temp_dir):
+    print(f"Converting {img_path} to JPEG with unique ID {unique_id}")
+    try:
+        # Load MRI image
+        mri_img = nib.load(img_path)
+        mri_data = mri_img.get_fdata()
+        print(f"Loaded MRI data with shape {mri_data.shape}")
+
+        # Extract middle slice and process
+        slice_index = mri_data.shape[2] // 2  
+        slice_2d = normalize_image(mri_data[:, :, slice_index])
+        slice_2d = cv2.rotate(slice_2d, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        
+        # Save temporary JPEG
+        output_path = os.path.join(temp_dir, f"{unique_id}.jpg")
+        cv2.imwrite(output_path, slice_2d)
+        print(f"Saved JPEG to {output_path}")
+
+        # Upload to Cloudinary
+        upload_res = cloudinary.uploader.upload(output_path)
+        print(f"Uploaded to Cloudinary: {upload_res['secure_url']}")
+        return upload_res["secure_url"]
+
+    except Exception as e:
+        raise Exception(f"Image processing failed: {str(e)}")
+    finally:
+        # Clean up temporary JPEG
+        if os.path.exists(output_path):
+            os.remove(output_path)
+            print(f"Removed temporary JPEG {output_path}")
+
+def normalize_image(image):
+    image = (image - np.min(image)) / (np.max(image) - np.min(image)) * 255
+    return image.astype(np.uint8)
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
