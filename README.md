@@ -25,7 +25,7 @@ This project is an **AI-driven diagnostic system** designed to assist doctors in
 ## 🛠️ Tech Stack  
 - **Frontend**: React + Tailwind CSS  
 - **Backend**: Node.js + Express.js  
-- **Database**: MongoDB  
+- **Database**: PostgresSQL
 - **Machine Learning**: Python (TensorFlow/Keras, OpenCV)  
 - **Authentication**: JWT  
 
