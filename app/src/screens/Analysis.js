@@ -70,8 +70,9 @@ const GradCamDetection = ({ navigation, route }) => {
     }
 
     try {
+      console.log(`${process.env.EXPO_PUBLIC_ML_SERVER_URL}/fslanalyze`);
       const fslResponse = await axios.post(
-        "https://skilled-moth-greatly.ngrok-free.app/fslanalyze",
+        `${process.env.EXPO_PUBLIC_ML_SERVER_URL}/fslanalyze`,
         formData,
         {
           headers: {

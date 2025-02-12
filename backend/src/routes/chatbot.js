@@ -48,7 +48,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     console.log("7");
     // Forward the Cloudinary URL and text to the /analyze endpoint
     const analyzeResponse = await axios.post(
-      `${process.env.ML_API_URL}analyze`,
+      `${process.env.ML_API_URL}/analyze`,
       {
         prompt: userText,
         image_url: uploadResponse.url,
@@ -73,12 +73,10 @@ router.post("/query", async (req, res) => {
 
     // Check if the image URL is stored in the session
     if (!req.session.imageUrl) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "No image associated with this session. Please upload an image first.",
-        });
+      return res.status(400).json({
+        error:
+          "No image associated with this session. Please upload an image first.",
+      });
     }
 
     const imageUrl = req.session.imageUrl;

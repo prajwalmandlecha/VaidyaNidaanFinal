@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -61,7 +61,7 @@ const AlzheimerDetectionPage = () => {
 
     try {
       const response = await fetch(
-        `https://skilled-moth-greatly.ngrok-free.app/fslanalyze`,
+        `${import.meta.env.VITE_ML_SERVER_URL}/fslanalyze`,
         {
           method: "POST",
           body: formData,

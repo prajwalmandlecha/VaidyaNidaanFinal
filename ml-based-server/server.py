@@ -33,7 +33,6 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_CLOUD_API_SECRET")
 )
 
-
 # Initialize the OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
