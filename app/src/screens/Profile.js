@@ -1,4 +1,11 @@
-import { StyleSheet, View, Image, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Image,
+  ActivityIndicator,
+  Text,
+  ScrollView,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { getProfile } from "../utils/Auth";
 import ProfileField from "../components/ProfileField";
@@ -24,18 +31,40 @@ const Profile = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Image
-        style={styles.profileImage}
-        source={require("../../assets/images.png")}
-      />
-      <View style={styles.body}>
-        <ProfileField fieldName="Name: " fieldValue={profile.name} />
-        <ProfileField fieldName="Specialty: " fieldValue={profile.specialty} />
-        <ProfileField fieldName="Email: " fieldValue={profile.email} />
-        {/*<Text>No. of patients: {profile.patients.length}</Text>*/}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 60 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.header}>
+        <Image
+          style={styles.profileImage}
+          source={require("../../assets/images.png")}
+        />
       </View>
-    </View>
+      <View style={styles.body}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
+          <View style={styles.card}>
+            <ProfileField fieldName="Name" fieldValue={profile.name} />
+            <ProfileField fieldName="Email" fieldValue={profile.email} />
+          </View>
+        </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Professional Details</Text>
+          <View style={styles.card}>
+            <ProfileField
+              fieldName="Specialty"
+              fieldValue={profile.specialty}
+            />
+            <ProfileField
+              fieldName="Patients"
+              fieldValue={`${profile.patients?.length || 0}`}
+            />
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -47,14 +76,17 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 20,
   },
+  header: {
+    alignItems: "center",
+  },
   profileImage: {
     alignSelf: "center",
-    width: 150,
-    height: 150,
+    width: 120,
+    height: 120,
     borderRadius: 75,
     borderColor: "#007bff",
     borderWidth: 2,
-    // shadowColor: "#000",
+    // shadowColor: "rgba(0, 0, 0, 0.1)",
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.01,
     // shadowRadius: 6,
@@ -65,10 +97,30 @@ const styles = StyleSheet.create({
     marginTop: 25,
     paddingHorizontal: 10,
   },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f8f9fa",
+  },
+  card: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 16,
+    padding: 8,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 1 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 2,
+    // elevation: 2,
   },
 });

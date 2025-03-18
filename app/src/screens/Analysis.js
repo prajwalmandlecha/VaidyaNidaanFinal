@@ -65,6 +65,7 @@ const GradCamDetection = ({ navigation, route }) => {
       console.log("Form Data:", formData);
     } catch (error) {
       console.error("Error preparing form data:", error);
+      alert("File Upload Error!" + error);
       setLoading(false);
       return;
     }
@@ -108,6 +109,7 @@ const GradCamDetection = ({ navigation, route }) => {
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      alert("File Upload Error!" + error);
     } finally {
       setLoading(false);
     }
@@ -130,13 +132,6 @@ const GradCamDetection = ({ navigation, route }) => {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={pickDocument2} style={styles.uploadButton}>
-        <Ionicons name="document-attach" size={24} color="#07054A" />
-        <Text style={styles.buttonText}>
-          {selectedFile2 ? "Replace hdr File" : "Choose hdr File"}
-        </Text>
-      </TouchableOpacity>
-
       {selectedFile && (
         <View style={styles.fileInfo}>
           {/* <Image
@@ -154,6 +149,13 @@ const GradCamDetection = ({ navigation, route }) => {
           </View>
         </View>
       )}
+
+      <TouchableOpacity onPress={pickDocument2} style={styles.uploadButton}>
+        <Ionicons name="document-attach" size={24} color="#07054A" />
+        <Text style={styles.buttonText}>
+          {selectedFile2 ? "Replace HDR File" : "Choose HDR File"}
+        </Text>
+      </TouchableOpacity>
 
       {selectedFile2 && (
         <View style={styles.fileInfo}>

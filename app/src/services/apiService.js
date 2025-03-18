@@ -2,10 +2,10 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = "http://192.168.130.8:5005/api";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: `${BASE_URL}/api`,
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
@@ -14,14 +14,14 @@ const api = axios.create({
 });
 
 export const fileApi = axios.create({
-  baseURL: "http://192.168.130.8:5005/api",
+  baseURL: `${BASE_URL}/api`,
   headers: {
     "Content-Type": "multipart/form-data",
   },
 });
 
 export const chatbotApi = axios.create({
-  baseURL: "http://192.168.130.8:5005/chatbot",
+  baseURL: `${BASE_URL}/chatbot`,
   headers: {
     "Content-Type": "multipart/form-data",
   },

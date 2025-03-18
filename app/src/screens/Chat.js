@@ -5,7 +5,6 @@ import SendIcon from "../components/SendIcon";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { UserContext } from "../context/UserContext";
 import { chatbotApi } from "../services/apiService";
-import removeMarkdown from "remove-markdown";
 import Markdown from "react-native-markdown-display";
 
 const Chat = () => {
@@ -13,7 +12,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([
     {
       _id: 1,
-      text: "Welcome !",
+      text: "Welcome! Please upload your scan and question.",
       createdAt: new Date(),
       user: {
         _id: 1,
@@ -110,7 +109,7 @@ const Chat = () => {
     const text = newMessages[0]?.text?.trim();
     setLoading(true);
     if (!text || !image) {
-      alert("Please provide both an image and text for analysis");
+      alert("Please provide both an image and text for analysis.");
       return;
     }
 

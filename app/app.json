@@ -9,7 +9,7 @@
     "newArchEnabled": true,
     "assetBundlePatterns": ["**/*"],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,10 +18,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.prajwal32.vaidyanidaan"
+      "package": "com.prajwal32.vaidyanidaan",
+      "versionCode": 1
     },
     "plugins": [
       [
